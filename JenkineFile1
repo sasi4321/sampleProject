@@ -1,0 +1,33 @@
+pipeline{
+    agent any
+    environment {
+        PATH = "/home/ubuntu/apache-maven-3.8.1/bin:$PATH"
+    }
+    stages{
+        stage('Git Checkout'){
+            steps{
+                git 'https://github.com/anand08222/sampleProject.git'
+            }
+        }
+        stage('Maven build'){
+            steps{
+                sh label: '', script: 'mvn clean install' 
+            }
+        }
+        stage('Build Docker Image'){
+            steps{
+                sh label: '', script: 'cp -r ../SampleProject0907/webapp/target .'
+                sh label: '', script: 'docker build -t anand08222/myappimage:1.0 .'
+            }
+        }
+        stage('Push DockerHub'){
+            steps{
+                withCredentials([string(credentialsId: 'docker-Pwd', variable: 'MyDockerHubPW')]) {
+                  sh label: '', script: 'docker login -u anand08222 -p ${MyDockerHubPW}'
+                  sh label: '', script: 'docker push anand08222/myappimage:1.0'
+                }
+                
+            }
+        }
+    }
+}
